@@ -1,0 +1,47 @@
+import json
+import csv
+import boto3
+
+def lambda_handler(event, context):
+    
+    region = 'eu-west-2'
+    record_list = []
+    
+    try:
+        s3 = boto3.client('s3')
+        
+        # get name of bucket- this obj can be accessed in the test suite under Amazon S3 Put
+        bucket = event['Records'][0]['s3']['bucket']['name']
+        
+        key = event['Records'][0]['s3']['object']['key']
+        
+        # test print bucket and key
+        print('Bucket: ', bucket, ' Key: ', key)
+        
+       
+        # read CSV using the Boto object created above
+        csv_file = s3.get_object(Bucket = bucket, Key = key)
+        
+        record_list = csv_file['Body'].read().decode('utf-8').split('\n')
+        
+        csv_reader = csv.reader(record_list, delimiter=',', quotechar='"')
+        
+        for row in csv_reader:
+            datetime = row[0]
+            iso2 = row[1]
+            country = row[2]
+            sku = row[3]
+            description = row[4]
+            colour = row[5]
+            size = row[6]
+            quantity = row[7]
+            
+            print('Date: ', datetime, 'iso: ', iso2, 'sku: ', sku)
+           
+    except Exception as e:
+        print(str(e))
+        
+    return {
+        'statusCode': 200,
+        'body': json.dumps('CSV has been imported to dynamo')
+    }
